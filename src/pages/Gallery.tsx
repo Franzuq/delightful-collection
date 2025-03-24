@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import ArtworkCard, { Artwork } from '@/components/ArtworkCard';
+import ArtworkCard from '@/components/ArtworkCard';
+import { Artwork } from '@/types/artwork';
 import { Filter, SortDesc, SortAsc, Search, Sliders, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,103 +11,15 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-
-// Mock data for gallery
-const GALLERY_ARTWORKS: Artwork[] = [
-  {
-    id: 1,
-    title: "Ethereal Dreams",
-    artistName: "Sophia Chen",
-    price: 2500,
-    imageUrl: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"
-  },
-  {
-    id: 2,
-    title: "Urban Symphony",
-    artistName: "Marcus Lee",
-    price: 1800,
-    imageUrl: "https://images.unsplash.com/photo-1561214115-f2f134cc4912?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"
-  },
-  {
-    id: 3,
-    title: "Celestial Harmony",
-    artistName: "Elena Rivera",
-    price: 3200,
-    imageUrl: "https://images.unsplash.com/photo-1549490349-8643362247b5?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"
-  },
-  {
-    id: 4,
-    title: "Whispers of Nature",
-    artistName: "Julian Wright",
-    price: 1950,
-    imageUrl: "https://images.unsplash.com/photo-1571115764595-644a1f56a55c?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"
-  },
-  {
-    id: 5,
-    title: "Abstract Thoughts",
-    artistName: "Olivia Taylor",
-    price: 2200,
-    imageUrl: "https://images.unsplash.com/photo-1541961017774-22349e4a1262?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"
-  },
-  {
-    id: 6,
-    title: "City Lights",
-    artistName: "Thomas Berg",
-    price: 1700,
-    imageUrl: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"
-  },
-  {
-    id: 7,
-    title: "Ocean Serenity",
-    artistName: "Mia Johnson",
-    price: 2800,
-    imageUrl: "https://images.unsplash.com/photo-1580196969807-cc6de282abfb?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"
-  },
-  {
-    id: 8,
-    title: "Mountain Majesty",
-    artistName: "David Wilson",
-    price: 3500,
-    imageUrl: "https://images.unsplash.com/photo-1552083375-1447ce886485?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"
-  },
-  {
-    id: 9,
-    title: "Desert Dreams",
-    artistName: "Sophia Chen",
-    price: 1900,
-    imageUrl: "https://images.unsplash.com/photo-1544867885-2333f61544ad?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"
-  },
-  {
-    id: 10,
-    title: "Twilight Fantasy",
-    artistName: "Elena Rivera",
-    price: 2700,
-    imageUrl: "https://images.unsplash.com/photo-1585908286456-991f6e0823a0?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"
-  },
-  {
-    id: 11,
-    title: "Industrial Revolution",
-    artistName: "Marcus Lee",
-    price: 3100,
-    imageUrl: "https://images.unsplash.com/photo-1584389368340-f95c31c33717?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"
-  },
-  {
-    id: 12,
-    title: "Blossoming Hope",
-    artistName: "Julian Wright",
-    price: 2300,
-    imageUrl: "https://images.unsplash.com/photo-1579541814924-49fef17c5be5?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"
-  }
-];
+import artworkService from '@/services/artworkService';
 
 const Gallery = () => {
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [filteredArtworks, setFilteredArtworks] = useState<Artwork[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [priceRange, setPriceRange] = useState([0, 5000]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const { toast } = useToast();
 
@@ -117,14 +29,33 @@ const Gallery = () => {
   ];
 
   useEffect(() => {
-    // Simulate API fetch with a small delay
-    const timer = setTimeout(() => {
-      setArtworks(GALLERY_ARTWORKS);
-      setFilteredArtworks(GALLERY_ARTWORKS);
-      setIsLoading(false);
-    }, 1000);
+    const fetchArtworks = async () => {
+      try {
+        const data = await artworkService.getAllArtworks();
+        // Transform backend data to match our Artwork type
+        const transformedArtworks = data.artworks.map((artwork: any) => ({
+          id: artwork.id,
+          title: artwork.title,
+          artistName: artwork.artist_name,
+          imageUrl: artwork.image_url,
+          isFavorited: false // We'll need to check this from the user's favorites
+        }));
+        
+        setArtworks(transformedArtworks);
+        setFilteredArtworks(transformedArtworks);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error fetching artworks:', error);
+        toast({
+          title: "Error loading artworks",
+          description: "Please try again later",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+      }
+    };
     
-    return () => clearTimeout(timer);
+    fetchArtworks();
   }, []);
 
   useEffect(() => {
@@ -140,38 +71,34 @@ const Gallery = () => {
       );
     }
     
-    // Apply price filter
-    results = results.filter(
-      artwork => artwork.price >= priceRange[0] && artwork.price <= priceRange[1]
-    );
+    // Apply sort
+    results.sort((a, b) => {
+      if (sortOrder === "newest") {
+        // In a real app, you would sort by created_at date
+        return Number(b.id) - Number(a.id);
+      } else {
+        return Number(a.id) - Number(b.id);
+      }
+    });
     
     // Apply category filters (in a real app, artworks would have category properties)
     if (selectedCategories.length > 0) {
       // This is just a simulation - in a real app you'd filter by actual categories
       // Here we're just filtering randomly based on the ID to simulate the effect
       results = results.filter(artwork => 
-        selectedCategories.some(cat => artwork.id % categories.length === categories.indexOf(cat))
+        selectedCategories.some(cat => Number(artwork.id) % categories.length === categories.indexOf(cat))
       );
     }
     
-    // Apply sort
-    results.sort((a, b) => {
-      if (sortOrder === "asc") {
-        return a.price - b.price;
-      } else {
-        return b.price - a.price;
-      }
-    });
-    
     setFilteredArtworks(results);
-  }, [artworks, searchQuery, priceRange, sortOrder, selectedCategories]);
+  }, [artworks, searchQuery, sortOrder, selectedCategories]);
 
-  const handleFavoriteToggle = (id: number) => {
+  const handleFavoriteToggle = (artworkId: string, isFavorited: boolean) => {
     // In a real app, this would make an API call
     setArtworks(prevArtworks => 
       prevArtworks.map(artwork => 
-        artwork.id === id 
-          ? { ...artwork, isFavorited: !artwork.isFavorited } 
+        artwork.id.toString() === artworkId 
+          ? { ...artwork, isFavorited } 
           : artwork
       )
     );
@@ -185,11 +112,30 @@ const Gallery = () => {
     );
   };
 
+  // Convert our simplified Artwork to the format ArtworkCard expects
+  const adaptArtworkForCard = (artwork: Artwork) => {
+    return {
+      id: artwork.id.toString(),
+      title: artwork.title,
+      imageUrl: artwork.imageUrl,
+      description: "A beautiful piece of art", // Default description
+      artist: {
+        id: "artist-" + Math.floor(Math.random() * 1000),
+        username: artwork.artistName,
+      },
+      likes: 0,
+      comments: 0,
+      isLiked: false,
+      isFavorited: artwork.isFavorited || false,
+      createdAt: new Date().toISOString(),
+      tags: []
+    };
+  };
+
   const handleResetFilters = () => {
     setSearchQuery("");
-    setPriceRange([0, 5000]);
     setSelectedCategories([]);
-    setSortOrder("asc");
+    setSortOrder("newest");
     
     toast({
       title: "Filters reset",
@@ -241,28 +187,28 @@ const Gallery = () => {
                 
                 <Select 
                   value={sortOrder}
-                  onValueChange={(value) => setSortOrder(value as "asc" | "desc")}
+                  onValueChange={(value) => setSortOrder(value as "newest" | "oldest")}
                 >
                   <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Sort by price" />
+                    <SelectValue placeholder="Sort by date" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="asc">
-                      <div className="flex items-center gap-2">
-                        <SortAsc className="h-4 w-4" />
-                        <span>Price: Low to High</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="desc">
-                      <div className="flex items-center gap-2">
+                    <SelectItem value="newest">
+                      <span className="flex items-center gap-2">
                         <SortDesc className="h-4 w-4" />
-                        <span>Price: High to Low</span>
-                      </div>
+                        <span>Newest First</span>
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="oldest">
+                      <span className="flex items-center gap-2">
+                        <SortAsc className="h-4 w-4" />
+                        <span>Oldest First</span>
+                      </span>
                     </SelectItem>
                   </SelectContent>
                 </Select>
                 
-                {selectedCategories.length > 0 || searchQuery || priceRange[0] > 0 || priceRange[1] < 5000 ? (
+                {selectedCategories.length > 0 || searchQuery ? (
                   <Button 
                     variant="ghost" 
                     size="sm" 
@@ -297,23 +243,6 @@ const Gallery = () => {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Price Range Filter */}
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Price Range</h4>
-                  <Slider
-                    value={priceRange}
-                    min={0}
-                    max={5000}
-                    step={100}
-                    onValueChange={setPriceRange}
-                    className="mb-2"
-                  />
-                  <div className="flex justify-between text-sm text-gray-600">
-                    <span>${priceRange[0]}</span>
-                    <span>${priceRange[1]}</span>
-                  </div>
-                </div>
-                
                 {/* Categories Filter */}
                 <div>
                   <h4 className="text-sm font-medium mb-2">Categories</h4>
@@ -381,7 +310,7 @@ const Gallery = () => {
                       {filteredArtworks.map(artwork => (
                         <ArtworkCard
                           key={artwork.id}
-                          artwork={artwork}
+                          artwork={adaptArtworkForCard(artwork)}
                           onFavoriteToggle={handleFavoriteToggle}
                         />
                       ))}

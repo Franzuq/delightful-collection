@@ -1,65 +1,80 @@
-
 import { useState, useEffect } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import ArtworkCard, { Artwork } from './ArtworkCard';
+import ArtworkCard from './ArtworkCard';
+import { Artwork } from '@/types/artwork';
 import { Link } from 'react-router-dom';
-
-// Mock data for featured artworks
-const FEATURED_ARTWORKS: Artwork[] = [
-  {
-    id: 1,
-    title: "Ethereal Dreams",
-    artistName: "Sophia Chen",
-    price: 2500,
-    imageUrl: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"
-  },
-  {
-    id: 2,
-    title: "Urban Symphony",
-    artistName: "Marcus Lee",
-    price: 1800,
-    imageUrl: "https://images.unsplash.com/photo-1561214115-f2f134cc4912?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"
-  },
-  {
-    id: 3,
-    title: "Celestial Harmony",
-    artistName: "Elena Rivera",
-    price: 3200,
-    imageUrl: "https://images.unsplash.com/photo-1549490349-8643362247b5?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"
-  },
-  {
-    id: 4,
-    title: "Whispers of Nature",
-    artistName: "Julian Wright",
-    price: 1950,
-    imageUrl: "https://images.unsplash.com/photo-1571115764595-644a1f56a55c?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"
-  }
-];
+import artworkService from '@/services/artworkService';
+import { useToast } from '@/hooks/useToast';
 
 const FeaturedArtworks = () => {
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Simulate API fetch with a small delay
-    const timer = setTimeout(() => {
-      setArtworks(FEATURED_ARTWORKS);
-      setIsLoading(false);
-    }, 800);
+    const fetchFeaturedArtworks = async () => {
+      try {
+        // In a real app, you might have a separate endpoint for featured artworks
+        // For now, we'll just use the first 4 from getAllArtworks
+        const data = await artworkService.getAllArtworks();
+        
+        // Transform backend data to match our Artwork type
+        const transformedArtworks = data.artworks
+          .slice(0, 4) // Just get the first 4 artworks
+          .map((artwork: any) => ({
+            id: artwork.id,
+            title: artwork.title,
+            artistName: artwork.artist_name,
+            imageUrl: artwork.image_url,
+            isFavorited: false // We'll need to check this from the user's favorites
+          }));
+        
+        setArtworks(transformedArtworks);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error fetching featured artworks:', error);
+        toast({
+          title: "Error loading featured artworks",
+          description: "Please try again later",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+      }
+    };
     
-    return () => clearTimeout(timer);
+    fetchFeaturedArtworks();
   }, []);
 
-  const handleFavoriteToggle = (id: number) => {
+  const handleFavoriteToggle = (artworkId: string, isFavorited: boolean) => {
     // In a real app, this would make an API call
     setArtworks(prevArtworks => 
       prevArtworks.map(artwork => 
-        artwork.id === id 
-          ? { ...artwork, isFavorited: !artwork.isFavorited } 
+        artwork.id.toString() === artworkId 
+          ? { ...artwork, isFavorited } 
           : artwork
       )
     );
+  };
+
+  // Convert our simplified Artwork to the format ArtworkCard expects
+  const adaptArtworkForCard = (artwork: Artwork) => {
+    return {
+      id: artwork.id.toString(),
+      title: artwork.title,
+      imageUrl: artwork.imageUrl,
+      description: "A beautiful piece of art", // Default description
+      artist: {
+        id: "artist-" + Math.floor(Math.random() * 1000),
+        username: artwork.artistName,
+      },
+      likes: 0,
+      comments: 0,
+      isLiked: false,
+      isFavorited: artwork.isFavorited || false,
+      createdAt: new Date().toISOString(),
+      tags: []
+    };
   };
 
   return (
@@ -97,7 +112,7 @@ const FeaturedArtworks = () => {
             {artworks.map(artwork => (
               <ArtworkCard
                 key={artwork.id}
-                artwork={artwork}
+                artwork={adaptArtworkForCard(artwork)}
                 onFavoriteToggle={handleFavoriteToggle}
               />
             ))}

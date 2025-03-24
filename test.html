@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test</title>
+</head>
+<body>
+    <h1>API Test</h1>
+    <button id="testDirectApi">Test Direct API (localhost:5000)</button>
+    <button id="testProxyApi">Test Proxy API (/api)</button>
+    <pre id="results" style="margin-top: 20px; padding: 10px; background-color: #f5f5f5; border: 1px solid #ddd;"></pre>
+
+    <script>
+        document.getElementById('testDirectApi').addEventListener('click', async () => {
+            const resultsElement = document.getElementById('results');
+            resultsElement.textContent = 'Loading...';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/artworks');
+                const data = await response.json();
+                resultsElement.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultsElement.textContent = `Error: ${error.message}`;
+            }
+        });
+
+        document.getElementById('testProxyApi').addEventListener('click', async () => {
+            const resultsElement = document.getElementById('results');
+            resultsElement.textContent = 'Loading...';
+            
+            try {
+                const response = await fetch('/api/artworks');
+                const data = await response.json();
+                resultsElement.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultsElement.textContent = `Error: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html> 

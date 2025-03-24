@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
@@ -162,77 +161,11 @@ const Index = () => {
         </section>
         
         {/* Testimonials Section */}
-        <section className="py-16 bg-white">
-          <div className="gallery-container">
-            <h2 className="section-title text-center">What Our Community Says</h2>
-            <p className="text-gray-600 text-center max-w-2xl mx-auto mb-12">
-              Hear from artists and collectors who have found success and joy through our platform.
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[
-                {
-                  quote: "As an emerging artist, Artistry has been instrumental in helping me reach new collectors and grow my career.",
-                  author: "Sophia Chen",
-                  role: "Visual Artist",
-                  avatar: "https://i.pravatar.cc/100?img=25"
-                },
-                {
-                  quote: "The curation on this platform is exceptional. I've found unique pieces that perfectly complement my home.",
-                  author: "Marcus Reynolds",
-                  role: "Art Collector",
-                  avatar: "https://i.pravatar.cc/100?img=12"
-                },
-                {
-                  quote: "The seamless process from browsing to purchase made collecting art a joy rather than a hassle.",
-                  author: "Eliza Thompson",
-                  role: "Interior Designer",
-                  avatar: "https://i.pravatar.cc/100?img=32"
-                }
-              ].map((testimonial, index) => (
-                <div 
-                  key={index} 
-                  className="bg-gray-50 p-6 rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-center mb-4 gap-3">
-                    <div className="w-12 h-12 rounded-full overflow-hidden">
-                      <img 
-                        src={testimonial.avatar} 
-                        alt={testimonial.author} 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-gallery-dark">{testimonial.author}</h4>
-                      <p className="text-sm text-gray-500">{testimonial.role}</p>
-                    </div>
-                  </div>
-                  <blockquote className="text-gray-700 italic">"{testimonial.quote}"</blockquote>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        {/* Removed "What Our Community Says" section as requested */}
         
         {/* CTA Section */}
-        <section className="py-20 bg-gradient-to-r from-gallery-teal to-gallery-dark text-white">
-          <div className="gallery-container text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Discover Amazing Art?</h2>
-            <p className="text-lg text-white/80 max-w-2xl mx-auto mb-8">
-              Join thousands of art enthusiasts who have found their perfect piece. Start exploring our curated collection today.
-            </p>
-            <Button 
-              size="lg" 
-              className="bg-white text-gallery-dark hover:bg-white/90 transition-colors px-8"
-              asChild
-            >
-              <Link to="/gallery">
-                Explore the Gallery
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-        </section>
+        {/* Removed "Ready to Discover Amazing Art?" section as requested */}
+        
       </main>
       
       <Footer />

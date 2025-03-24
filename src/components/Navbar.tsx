@@ -1,12 +1,13 @@
-
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Search, Menu, X, User, LogIn } from 'lucide-react';
+import { Search, Menu, X, Upload, Bookmark } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const { user, isAuthenticated, logout } = useAuth();
   
   // Check if user is on a specific page
   const isActive = (path: string) => location.pathname === path;
@@ -50,22 +51,56 @@ const Navbar = () => {
             </Link>
           </div>
           
-          {/* Search, Auth & Mobile Menu */}
+          {/* Search & Auth */}
           <div className="flex items-center gap-4">
             <Button variant="outline" size="icon" className="rounded-full">
               <Search className="h-4 w-4" />
             </Button>
             
-            <div className="hidden md:flex items-center gap-2">
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/login" className="flex items-center gap-1">
-                  <LogIn className="h-4 w-4 mr-1" />
-                  Login
-                </Link>
-              </Button>
-              <Button className="bg-gallery-teal hover:bg-gallery-teal/90" size="sm" asChild>
-                <Link to="/register">Sign Up</Link>
-              </Button>
+            {/* Auth Links - Desktop */}
+            <div className="hidden md:flex items-center gap-4">
+              {isAuthenticated ? (
+                <>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/upload" className="flex items-center gap-1">
+                      <Upload className="h-4 w-4 mr-1" />
+                      Share Artwork
+                    </Link>
+                  </Button>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/favorites" className="flex items-center gap-1">
+                      <Bookmark className="h-4 w-4 mr-1" />
+                      Favorites
+                    </Link>
+                  </Button>
+                  <span className="text-sm font-medium text-gallery-dark">
+                    Hi, {user?.username}
+                  </span>
+                  <Link 
+                    to="/profile" 
+                    className="text-sm font-medium text-gallery-dark hover:text-gallery-teal transition-colors"
+                  >
+                    Profile
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={logout}
+                    className="text-sm font-medium text-gallery-dark hover:text-gallery-teal"
+                  >
+                    Log Out
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/login">Login</Link>
+                  </Button>
+                  <Button className="bg-gallery-teal hover:bg-gallery-teal/90" size="sm" asChild>
+                    <Link to="/register">Sign Up</Link>
+                  </Button>
+                </>
+              )}
             </div>
             
             {/* Mobile Menu Button */}
@@ -86,52 +121,94 @@ const Navbar = () => {
         
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden py-4 px-2 space-y-3 border-t border-gray-200 animate-slide-in">
+          <div className="py-3 px-5 border-t border-gray-100 md:hidden">
             <Link 
               to="/" 
-              className={`block py-2 px-3 rounded-md ${isActive('/') ? 'bg-gallery-teal/10 text-gallery-teal' : 'text-gallery-dark'}`}
+              className="block py-2 text-gallery-dark hover:text-gallery-teal"
               onClick={() => setIsMenuOpen(false)}
             >
               Home
             </Link>
             <Link 
               to="/gallery" 
-              className={`block py-2 px-3 rounded-md ${isActive('/gallery') ? 'bg-gallery-teal/10 text-gallery-teal' : 'text-gallery-dark'}`}
+              className="block py-2 text-gallery-dark hover:text-gallery-teal"
               onClick={() => setIsMenuOpen(false)}
             >
               Gallery
             </Link>
             <Link 
               to="/artists" 
-              className={`block py-2 px-3 rounded-md ${isActive('/artists') ? 'bg-gallery-teal/10 text-gallery-teal' : 'text-gallery-dark'}`}
+              className="block py-2 text-gallery-dark hover:text-gallery-teal"
               onClick={() => setIsMenuOpen(false)}
             >
               Artists
             </Link>
             <Link 
               to="/about" 
-              className={`block py-2 px-3 rounded-md ${isActive('/about') ? 'bg-gallery-teal/10 text-gallery-teal' : 'text-gallery-dark'}`}
+              className="block py-2 text-gallery-dark hover:text-gallery-teal"
               onClick={() => setIsMenuOpen(false)}
             >
               About
             </Link>
-            <div className="pt-2 flex flex-col gap-2 border-t border-gray-100">
-              <Link 
-                to="/login" 
-                className="flex items-center justify-center w-full py-2 text-gallery-dark border border-gray-200 rounded-md"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <LogIn className="h-4 w-4 mr-2" />
-                Login
-              </Link>
-              <Link 
-                to="/register" 
-                className="flex items-center justify-center w-full py-2 bg-gallery-teal text-white rounded-md"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <User className="h-4 w-4 mr-2" />
-                Sign Up
-              </Link>
+            
+            {/* Auth Links - Mobile */}
+            <div className="pt-2 border-t border-gray-100 mt-2">
+              {isAuthenticated ? (
+                <>
+                  <Link 
+                    to="/upload" 
+                    className="flex items-center py-2 text-gallery-dark hover:text-gallery-teal"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Share Artwork
+                  </Link>
+                  <Link 
+                    to="/favorites" 
+                    className="flex items-center py-2 text-gallery-dark hover:text-gallery-teal"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Bookmark className="h-4 w-4 mr-2" />
+                    Favorites
+                  </Link>
+                  <span className="block py-2 text-gallery-dark">
+                    Hi, {user?.username}
+                  </span>
+                  <Link 
+                    to="/profile" 
+                    className="block py-2 text-gallery-dark hover:text-gallery-teal"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Profile
+                  </Link>
+                  <button 
+                    onClick={() => {
+                      logout();
+                      setIsMenuOpen(false);
+                    }}
+                    className="block py-2 text-gallery-dark hover:text-gallery-teal w-full text-left"
+                  >
+                    Log Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link 
+                    to="/login" 
+                    className="block py-2 text-gallery-dark hover:text-gallery-teal"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Log In
+                  </Link>
+                  <Link 
+                    to="/register" 
+                    className="block py-2 text-gallery-dark hover:text-gallery-teal"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         )}
