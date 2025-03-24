@@ -1,5 +1,11 @@
-from app import db
 from datetime import datetime
+
+# Import db using a function to avoid circular import
+db = None  # This will be replaced by the set_db function
+
+def set_db(database):
+    global db
+    db = database
 
 class Artwork(db.Model):
     __tablename__ = 'artworks'

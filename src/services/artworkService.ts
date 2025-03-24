@@ -1,7 +1,20 @@
 import axios from 'axios';
 
-// Using direct URL for debugging
-const API_URL = 'http://localhost:5000/api';
+// Dynamically set the API URL based on the environment
+const getApiUrl = () => {
+  const hostname = window.location.hostname;
+  // If we're on localhost, use the development server port
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:5000/api';
+  }
+  // In production, assume API is on the same domain but with /api path
+  return `${window.location.origin}/api`;
+};
+
+const API_URL = getApiUrl();
+
+// Configure axios defaults
+axios.defaults.withCredentials = true;
 
 const artworkService = {
   // Get all artworks with optional filters
@@ -43,62 +56,96 @@ const artworkService = {
 
   // Add new artwork
   addArtwork: async (artworkData: FormData, token: string) => {
-    const response = await axios.post(`${API_URL}/artworks`, artworkData, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'multipart/form-data',
-      }
-    });
-    return response.data;
+    try {
+      console.log('Sending artwork data with token:', token ? 'Token provided' : 'No token');
+      const response = await axios.post(`${API_URL}/artworks`, artworkData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Don't manually set Content-Type when sending FormData
+          // axios will set the correct multipart/form-data content type with boundary
+        },
+        // Enable credentials for CORS
+        withCredentials: true
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error creating artwork:', error);
+      throw error;
+    }
   },
 
   // Like/dislike an artwork
   toggleLike: async (artworkId: string, token: string) => {
-    const response = await axios.post(`${API_URL}/artworks/${artworkId}/like`, {}, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    return response.data;
+    try {
+      const response = await axios.post(`${API_URL}/artworks/${artworkId}/like`, {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      throw error;
+    }
   },
 
   // Favorite/unfavorite an artwork
   toggleFavorite: async (artworkId: string, token: string) => {
-    const response = await axios.post(`${API_URL}/artworks/${artworkId}/favorite`, {}, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    return response.data;
+    try {
+      const response = await axios.post(`${API_URL}/artworks/${artworkId}/favorite`, {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      throw error;
+    }
   },
 
   // Get user's favorites
   getUserFavorites: async (token: string) => {
-    const response = await axios.get(`${API_URL}/favorites`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    return response.data;
+    try {
+      const response = await axios.get(`${API_URL}/favorites`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching favorites:', error);
+      throw error;
+    }
   },
 
   // Add a comment to artwork
   addComment: async (artworkId: string, content: string, token: string) => {
-    const response = await axios.post(`${API_URL}/artworks/${artworkId}/comments`, 
-      { content },
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`
+    try {
+      const response = await axios.post(`${API_URL}/artworks/${artworkId}/comments`, 
+        { content },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
         }
-      }
-    );
-    return response.data;
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      throw error;
+    }
   },
 
   // Get artwork comments
   getComments: async (artworkId: string) => {
-    const response = await axios.get(`${API_URL}/artworks/${artworkId}/comments`);
-    return response.data;
+    try {
+      const response = await axios.get(`${API_URL}/artworks/${artworkId}/comments`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      throw error;
+    }
   }
 };
 

@@ -1,3 +1,2 @@
-from app.models.user import User
-from app.models.artwork import Artwork
-from app.models.favorite import Favorite 
+# This file is intentionally left empty to properly initialize the models package
+# Models are imported and initialized in app/__init__.py 

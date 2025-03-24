@@ -2,12 +2,20 @@ import subprocess
 import os
 import sys
 import time
-from app import create_app, db
-from app.models.artwork import Artwork
-from app.models.user import User
 
-# Create Flask app
-app = create_app()
+# Handle imports in a way that works both at runtime and for linters
+try:
+    from app import create_app, db
+    
+    # Create Flask app
+    app = create_app()
+    
+    # Import models after app is created
+    from app.models.artwork import Artwork
+    from app.models.user import User
+except ImportError:
+    # These will be properly imported when the Flask app runs
+    pass
 
 def setup_and_run():
     """Set up and run the Flask application."""

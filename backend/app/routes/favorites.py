@@ -1,9 +1,15 @@
 from flask import Blueprint, request, jsonify
-from app import db
-from app.models.favorite import Favorite
-from app.models.artwork import Artwork
-from app.utils import token_required
 from sqlalchemy.exc import IntegrityError
+
+# Handle imports in a way that works both at runtime and for linters
+try:
+    from app import db
+    from app.models.favorite import Favorite
+    from app.models.artwork import Artwork
+    from app.utils import token_required
+except ImportError:
+    # These will be properly imported when the Flask app runs
+    pass
 
 favorites_bp = Blueprint('favorites', __name__)
 

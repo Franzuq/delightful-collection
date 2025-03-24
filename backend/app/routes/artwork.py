@@ -1,7 +1,15 @@
 from flask import Blueprint, request, jsonify
-from app import db
-from app.models.artwork import Artwork
-from app.utils import token_required, artist_required
+import os
+import tempfile
+
+# Handle imports in a way that works both at runtime and for linters
+try:
+    from app import db
+    from app.models.artwork import Artwork
+    from app.utils import token_required, artist_required, upload_image_to_cloudinary
+except ImportError:
+    # These will be properly imported when the Flask app runs
+    pass
 
 artwork_bp = Blueprint('artwork', __name__)
 
@@ -37,31 +45,73 @@ def get_artwork(artwork_id):
     
     return jsonify({'artwork': artwork.to_dict()}), 200
 
-@artwork_bp.route('/artworks', methods=['POST'])
+@artwork_bp.route('/artworks', methods=['POST', 'OPTIONS'])
 @token_required
 @artist_required
 def create_artwork(current_user):
-    data = request.get_json()
-    
-    # Check if required fields are provided
-    required_fields = ['title', 'image_url']
-    for field in required_fields:
-        if field not in data:
-            return jsonify({'error': f'Missing required field: {field}'}), 400
+    """Create a new artwork."""
+    # Handle preflight OPTIONS request
+    if request.method == 'OPTIONS':
+        return '', 200
+        
+    # Check if we're receiving form data or JSON
+    if request.content_type and 'multipart/form-data' in request.content_type:
+        # Handle form data
+        data = request.form
+        image_file = request.files.get('image')
+        
+        # Check if required fields are provided
+        if not data.get('title'):
+            return jsonify({'error': 'Missing required field: title'}), 400
+            
+        if not image_file:
+            return jsonify({'error': 'Missing required field: image'}), 400
+        
+        # Upload image to Cloudinary
+        try:
+            # Save the file temporarily
+            temp_file = tempfile.NamedTemporaryFile(delete=False)
+            image_file.save(temp_file.name)
+            temp_file.close()
+            
+            # Upload to Cloudinary
+            image_url = upload_image_to_cloudinary(temp_file.name)
+            
+            # Clean up temporary file
+            os.unlink(temp_file.name)
+        except Exception as e:
+            return jsonify({'error': f'Error uploading image: {str(e)}'}), 500
+        
+    else:
+        # Handle JSON data
+        data = request.get_json()
+        
+        # Check if required fields are provided
+        required_fields = ['title', 'image_url']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+        
+        image_url = data['image_url']
     
     # Create new artwork
     try:
         new_artwork = Artwork(
             title=data['title'],
-            description=data.get('description'),
-            image_url=data['image_url'],
+            description=data.get('description', ''),
+            image_url=image_url,
             artist_id=current_user.id,
             category=data.get('category'),
             medium=data.get('medium'),
             dimensions=data.get('dimensions'),
-            year=data.get('year'),
+            year=data.get('year', None),
             location=data.get('location')
         )
+        
+        # Process tags if present
+        if 'tags' in request.form:
+            # Handle tags from form data
+            pass
         
         db.session.add(new_artwork)
         db.session.commit()

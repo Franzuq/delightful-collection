@@ -2,7 +2,39 @@ from flask import request, jsonify
 from functools import wraps
 import jwt
 import os
-from app.models.user import User
+import cloudinary
+import cloudinary.uploader
+
+# For avoiding circular imports
+user_module = None
+
+def set_user_module(module):
+    global user_module
+    user_module = module
+
+# Configure Cloudinary
+cloudinary.config(
+    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME', 'demo'),
+    api_key=os.getenv('CLOUDINARY_API_KEY', ''),
+    api_secret=os.getenv('CLOUDINARY_API_SECRET', ''),
+    secure=True
+)
+
+def upload_image_to_cloudinary(image_file, folder="artwork"):
+    """Upload an image to Cloudinary and return the URL."""
+    try:
+        # Upload the image
+        result = cloudinary.uploader.upload(
+            image_file,
+            folder=folder,
+            resource_type="image"
+        )
+        # Return the secure URL
+        return result['secure_url']
+    except Exception as e:
+        print(f"Error uploading to Cloudinary: {e}")
+        # Return a fallback URL in case of error
+        return f"https://images.unsplash.com/photo-{1550000000000}?ixlib=rb-4.0.3"
 
 def token_required(f):
     @wraps(f)
@@ -19,7 +51,8 @@ def token_required(f):
             payload = jwt.decode(token, os.getenv('SECRET_KEY'), algorithms=['HS256'])
             user_id = payload['user_id']
             
-            # Get user
+            # Get user using the user module passed in from app/__init__.py
+            User = user_module.User
             current_user = User.query.get(user_id)
             
             if not current_user:

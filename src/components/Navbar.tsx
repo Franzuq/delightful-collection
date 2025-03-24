@@ -37,18 +37,6 @@ const Navbar = () => {
             >
               Gallery
             </Link>
-            <Link 
-              to="/artists" 
-              className={`text-sm font-medium ${isActive('/artists') ? 'text-gallery-teal' : 'text-gallery-dark hover:text-gallery-teal transition-colors'}`}
-            >
-              Artists
-            </Link>
-            <Link 
-              to="/about" 
-              className={`text-sm font-medium ${isActive('/about') ? 'text-gallery-teal' : 'text-gallery-dark hover:text-gallery-teal transition-colors'}`}
-            >
-              About
-            </Link>
           </div>
           
           {/* Search & Auth */}

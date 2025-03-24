@@ -1,9 +1,16 @@
 from flask import Blueprint, request, jsonify
-from app import db
-from app.models.user import User
 import jwt
 import datetime
 import os
+
+# Handle imports in a way that works both at runtime and for linters
+try:
+    from app import db
+    from app.models.user import User
+    from app.utils import token_required
+except ImportError:
+    # These will be properly imported when the Flask app runs
+    pass
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -29,9 +36,11 @@ def register():
         new_user = User(
             username=data['username'],
             email=data['email'],
-            password=data['password'],
             is_artist=data.get('is_artist', False)
         )
+        
+        # Set password using the secure method
+        new_user.set_password(data['password'])
         
         db.session.add(new_user)
         db.session.commit()
@@ -99,4 +108,39 @@ def get_user():
     except jwt.ExpiredSignatureError:
         return jsonify({'error': 'Token has expired'}), 401
     except jwt.InvalidTokenError:
-        return jsonify({'error': 'Invalid token'}), 401 
+        return jsonify({'error': 'Invalid token'}), 401
+
+@auth_bp.route('/update-artist-status', methods=['PUT', 'OPTIONS'])
+@token_required
+def update_artist_status(current_user):
+    """Update the artist status of the authenticated user"""
+    # Handle preflight OPTIONS request
+    if request.method == 'OPTIONS':
+        return '', 200
+        
+    data = request.get_json()
+    
+    if 'is_artist' not in data:
+        return jsonify({'error': 'is_artist field is required'}), 400
+    
+    try:
+        current_user.is_artist = data['is_artist']
+        db.session.commit()
+        
+        # Generate a new token with updated artist status
+        token = jwt.encode({
+            'user_id': current_user.id,
+            'username': current_user.username,
+            'is_artist': current_user.is_artist,
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1)
+        }, os.getenv('SECRET_KEY'))
+        
+        return jsonify({
+            'message': 'Artist status updated successfully',
+            'token': token,
+            'user': current_user.to_dict()
+        }), 200
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500 

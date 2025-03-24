@@ -7,11 +7,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/useToast';
 import { X, Upload, Image as ImageIcon } from 'lucide-react';
 import artworkService from '@/services/artworkService';
+import BecomeArtistPrompt from './BecomeArtistPrompt';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 const AddArtworkForm = () => {
-  const { token } = useAuth();
+  const { user, token } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -22,11 +23,15 @@ const AddArtworkForm = () => {
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showArtistPrompt, setShowArtistPrompt] = useState(false);
   const [errors, setErrors] = useState<{
     title?: string;
     description?: string;
     image?: string;
   }>({});
+
+  // Check if the user is an artist
+  const isArtist = user?.is_artist || false;
 
   const validateForm = () => {
     const newErrors: {
@@ -91,6 +96,12 @@ const AddArtworkForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Check if user is an artist first
+    if (!isArtist) {
+      setShowArtistPrompt(true);
+      return;
+    }
+    
     if (!validateForm()) return;
     
     setIsSubmitting(true);
@@ -132,6 +143,16 @@ const AddArtworkForm = () => {
       setIsSubmitting(false);
     }
   };
+
+  // If showing artist prompt, show that instead of the form
+  if (showArtistPrompt) {
+    return (
+      <BecomeArtistPrompt 
+        onSuccess={() => setShowArtistPrompt(false)} 
+        onCancel={() => navigate('/gallery')} 
+      />
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
